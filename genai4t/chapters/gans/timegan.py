@@ -50,22 +50,6 @@ class PretrainAEModule(BaseLightningModule):
         self.encoder = encoder
         self.decoder = decoder
 
-    # TODO: THIS IS SAFE TO REMOVE
-    # def _compute_reconstruction_loss(self, x: torch.Tensor, reconstructed_x: torch.Tensor) -> torch.Tensor:
-    #     """
-    #     Compute reconstruction loss between input and reconstructed data.
-        
-    #     Args:
-    #         x: Original input tensor
-    #         reconstructed_x: Reconstructed tensor from the decoder
-            
-    #     Returns:
-    #         torch.Tensor: Sum of squared differences between input and reconstruction
-    #     """
-    #     err = torch.pow(x - reconstructed_x, 2)
-    #     reconst_loss = torch.sum(err)
-    #     return reconst_loss
-
     def step(self, x: torch.Tensor) -> torch.Tensor:
         """
         Perform a single training step.
@@ -223,7 +207,6 @@ class TimeGanModule(BaseGanModule):
         self.gamma = gamma
 
     def configure_optimizers(self):
-        # TODO: ADD BETAS TO IMPROVE PERFORMANCE
         generator_opt = torch.optim.Adam(
             itertools.chain(
                 self.generator.parameters(),

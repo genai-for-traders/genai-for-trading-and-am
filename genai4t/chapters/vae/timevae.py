@@ -88,11 +88,6 @@ class SeasonalLayer(nn.Module):
         season_indexes = season_indexes.repeat(self.seq_len // len_per_season + 1)[: self.seq_len]
         return season_indexes
 
-    # TODO: Simpler implementation :)
-    # def _get_season_indexes_over_seq(self, num_seasons: int, len_per_season: int):
-    #     season_indexes = (torch.arange(self.seq_len) // len_per_season) % num_seasons
-    #     return season_indexes
-    
 
     def forward(
         self,

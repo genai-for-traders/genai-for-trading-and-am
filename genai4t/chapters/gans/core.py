@@ -303,7 +303,6 @@ class GanModule(BaseGanModule):
             if isinstance(self.clip_gradient_norm, float):
                 self.clip_gradients(generator_opt, self.clip_gradient_norm, gradient_clip_algorithm='norm')
             
-            # TODO: KEEP NORMS? 
             if self.log_norm:
                 norms = grad_norm(self, norm_type=2)
                 norms['gen_step'] = 0

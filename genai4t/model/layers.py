@@ -30,7 +30,6 @@ class GRULayer(nn.Module):
 
 
 
-# TODO: We can refactore both in a single class
 class LSTMClassifier(BaseLightningModule):
     def __init__(
         self,

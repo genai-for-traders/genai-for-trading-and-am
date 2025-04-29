@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "genai4t"
+version = "0.1.0"
+description = "Python package for the Generative AI for Trading and Asset Management (Gatam) book"
+license = "MIT"
+authors = ["Yanick Medina <yanickjmedina@gmail.com>", "Hamlet Medina <hamletjmedina@gmail.com>"]
+maintainers = ["Yanick Medina <yanickjmedina@gmail.com>", "Hamlet Medina <hamletjmedina@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/genai-for-traders/genai-for-trading-and-am"
+repository = "https://github.com/genai-for-traders/genai-for-trading-and-am"
+documentation = "https://github.com/genai-for-traders/genai-for-trading-and-am"
+classifiers=[
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+]
+packages = [{ include = "genai4t" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.23.5"
+pandas = "==2.0"
+scikit-learn = "^1.4.1.post1"
+matplotlib = "^3.8.3"
+seaborn = "^0.13.2"
+pydantic-settings = "^2.2.1"
+tabulate = "^0.9.0"
+torchtyping = "^0.1.5"
+torch = "2.5.1"
+lightning = "^2.4.0"
+omegaconf = "^2.3.0"
+datasets = {version="^2.21.0"}
+pytest = "^8.3.5"
+ujson = "5.10.0"
+
+torchvision = {version="^0.20.1", optional = false}
+nltk = {version="^3.9.1", optional = true}
+transformers = {version="^4.3.0", optional = true, extras=["torch"]}
+evaluate = {version="^0.4.3", optional = true }
+
+chronos-forecasting = {git = "https://github.com/amazon-science/chronos-forecasting.git", optional = false, branch="main"}
+gluonts = {version="^0.14.4", optional = false}
+statsmodels = {version="^0.14.4", optional = false}
+
+[tool.poetry.extras]
+hf = ["nltk", "transformers", "evaluate"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

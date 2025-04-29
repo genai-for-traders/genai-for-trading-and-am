@@ -22,6 +22,9 @@ This repository contains supporting materials and Jupyter notebooks organized by
 - **Chapter 8**: Generative Adversarial Networks (GANs) — focused on time series generation using GANs.
 - **Chapter 10**: Efficient Inference — explores model compression, distillation, and fine-tuning techniques for LLMs.
 
+The notebooks focus on the practical aspects of the book. Each notebook provides pointers to the relevant chapters to guide your understanding.
+
+
 ## Getting Started
 
 ### Clone the Repository

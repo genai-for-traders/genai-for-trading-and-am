@@ -83,9 +83,6 @@ pip install jupyter notebook
 - **GPU Requirements:**
   Notebooks from Chapter 10, particularly `FinbertDistillationCompression.ipynb` and `LLAMA_3_1_Finetune_Finance.ipynb` require a GPU to run in a reasonable amount of time. If you don't have access to a local GPU, you can run these notebooks on [Google Colab](https://colab.research.google.com/).
 
-- **CPU-Friendly Notebooks:**  
-  The majority of other notebooks can be executed on a standard CPU machine within reasonable time.
-
 ---
 
 ## Tech Stack

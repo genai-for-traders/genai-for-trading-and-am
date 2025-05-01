@@ -23,7 +23,9 @@ from gluonts.torch.batchify import batchify
 from gluonts.dataset.common import Dataset
 
 
-def get_training_splitter(context_length: int, prediction_length: int) -> InstanceSplitter:
+def get_training_splitter(
+    context_length: int, prediction_length: int
+) -> InstanceSplitter:
     """
     Creates an InstanceSplitter for training data that splits time series into training instances.
 
@@ -54,8 +56,8 @@ def get_training_splitter(context_length: int, prediction_length: int) -> Instan
 
 
 def get_prediction_splitter(
-        context_length: int,
-        prediction_length: int,
+    context_length: int,
+    prediction_length: int,
 ) -> InstanceSplitter:
     """
     Creates an InstanceSplitter for prediction/inference that splits time series for forecasting.
@@ -71,14 +73,14 @@ def get_prediction_splitter(
             - Creates windows of context_length for past and prediction_length for future
     """
     prediction_splitter = InstanceSplitter(
-            target_field=FieldName.TARGET,
-            is_pad_field=FieldName.IS_PAD,
-            start_field=FieldName.START,
-            forecast_start_field=FieldName.FORECAST_START,
-            instance_sampler=TestSplitSampler(),
-            past_length=context_length,
-            future_length=prediction_length,
-        )
+        target_field=FieldName.TARGET,
+        is_pad_field=FieldName.IS_PAD,
+        start_field=FieldName.START,
+        forecast_start_field=FieldName.FORECAST_START,
+        instance_sampler=TestSplitSampler(),
+        past_length=context_length,
+        future_length=prediction_length,
+    )
     return prediction_splitter
 
 
@@ -109,7 +111,8 @@ class RobustScaler(Scaler):
         self.minimum_scale = minimum_scale
 
     def __call__(
-        self, data: torch.Tensor,
+        self,
+        data: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         with torch.no_grad():
             observed_data = data
@@ -166,14 +169,13 @@ class BaseEstimator(PyTorchLightningEstimator):
     ) -> None:
         if not trainer_kwargs:
             trainer_kwargs = {}
-        trainer_kwargs['max_steps'] = num_steps
+        trainer_kwargs["max_steps"] = num_steps
         trainer_kwargs["max_epochs"] = -1
         super().__init__(trainer_kwargs=trainer_kwargs)
         self.prediction_length = prediction_length
         self.context_length = context_length
         self.batch_size = batch_size
         self.num_batches_per_epoch = num_batches_per_epoch
-        
 
     def create_transformation(self) -> Transformation:
         """
@@ -201,9 +203,9 @@ class BaseEstimator(PyTorchLightningEstimator):
             PyTorchPredictor: Configured predictor for making forecasts
         """
         prediction_splitter = get_prediction_splitter(
-            context_length=self.context_length,
-            prediction_length=self.prediction_length)
-        
+            context_length=self.context_length, prediction_length=self.prediction_length
+        )
+
         return PyTorchPredictor(
             prediction_length=self.prediction_length,
             input_names=["past_target"],
@@ -233,7 +235,9 @@ class BaseEstimator(PyTorchLightningEstimator):
                 - Applies the training splitter transformation
                 - Processes num_batches_per_epoch batches per epoch
         """
-        training_splitter = get_training_splitter(self.context_length, self.prediction_length)
+        training_splitter = get_training_splitter(
+            self.context_length, self.prediction_length
+        )
         # Create the training data loader
         # This handles batching and preprocessing of training data
         train_dl = TrainDataLoader(
@@ -242,7 +246,7 @@ class BaseEstimator(PyTorchLightningEstimator):
             stack_fn=batchify,  # Function to combine samples into batches
             transform=training_splitter,  # Preprocessing transformation
             num_batches_per_epoch=self.num_batches_per_epoch,  # Number of batches per training epoch
-)
+        )
         return train_dl
 
     def create_validation_data_loader(
@@ -268,7 +272,9 @@ class BaseEstimator(PyTorchLightningEstimator):
         """
         # Create the training data loader
         # This handles batching and preprocessing of training data
-        training_splitter = get_training_splitter(self.context_length, self.prediction_length)
+        training_splitter = get_training_splitter(
+            self.context_length, self.prediction_length
+        )
         valid_dl = InferenceDataLoader(
             Cached(data),  # Cache dataset for faster training
             batch_size=self.batch_size,  # Number of samples per batch

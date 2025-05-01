@@ -160,7 +160,9 @@ class LagLlamaEstimator(PyTorchLightningEstimator):
         ckpt_path: Optional[str] = None,
         nonnegative_pred_samples: bool = False,
         use_single_pass_sampling: bool = False,
-        device: torch.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        device: torch.device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        ),
     ) -> None:
         default_trainer_kwargs = {"max_epochs": 100}
         if trainer_kwargs is not None:
@@ -400,9 +402,11 @@ class LagLlamaEstimator(PyTorchLightningEstimator):
             instance_sampler=instance_sampler,
             past_length=self.context_length + max(self.lags_seq),
             future_length=self.prediction_length,
-            time_series_fields=[FieldName.FEAT_TIME, FieldName.OBSERVED_VALUES]
-            if self.time_feat
-            else [FieldName.OBSERVED_VALUES],
+            time_series_fields=(
+                [FieldName.FEAT_TIME, FieldName.OBSERVED_VALUES]
+                if self.time_feat
+                else [FieldName.OBSERVED_VALUES]
+            ),
             dummy_value=self.distr_output.value_in_support,
         )
 

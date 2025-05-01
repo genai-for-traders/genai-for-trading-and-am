@@ -5,9 +5,10 @@ from lightning import seed_everything
 import numpy as np
 import torch
 
+
 def load_yml(path: str) -> Dict[str, Any]:
     """
-    Load a YAML file. 
+    Load a YAML file.
 
     Args:
         path (str): The path to the YAML file.
@@ -45,7 +46,7 @@ def get_torch_device() -> torch.device:
         torch.device: The best available device for torch operations.
     """
     if torch.cuda.is_available():
-        return torch.device("cuda:0") 
+        return torch.device("cuda:0")
     elif torch.mps.is_available():
         return torch.device("mps")
-    return torch.device('cpu')
+    return torch.device("cpu")

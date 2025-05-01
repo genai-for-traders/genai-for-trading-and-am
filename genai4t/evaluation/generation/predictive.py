@@ -17,7 +17,9 @@ def create_supervised_xy(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     predict last time step
     """
-    assert len(data.shape) == 3, f"time series must have 3 dimensions (bs, L, D), got: {len(data.shape)}"
+    assert (
+        len(data.shape) == 3
+    ), f"time series must have 3 dimensions (bs, L, D), got: {len(data.shape)}"
     assert data.shape[1] > 1, "time series must have at least 2 timesteps"
 
     context = data[:, :-1, :]
@@ -28,43 +30,38 @@ def create_supervised_xy(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return context, target
 
 
-def create_supervised_dataset(
-        data: np.ndarray) -> TensorDataset:
-    
+def create_supervised_dataset(data: np.ndarray) -> TensorDataset:
+
     assert data.dtype == np.float32
     context, target = create_supervised_xy(data)
 
-    real_train_ds = TensorDataset(
-        torch.from_numpy(context),
-        torch.from_numpy(target)
-    )
+    real_train_ds = TensorDataset(torch.from_numpy(context), torch.from_numpy(target))
 
     return real_train_ds
 
 
 def compute_predictive_scores(
-        real_data: np.ndarray,
-        synthetic_data: np.ndarray,
-        reg: LSTMRegressor,
-        num_steps: int,
-        test_split: float = 0.2,
-        random_state: int = 0,
-        batch_size: int = 32,
-        plot: bool = True) -> pd.DataFrame:
+    real_data: np.ndarray,
+    synthetic_data: np.ndarray,
+    reg: LSTMRegressor,
+    num_steps: int,
+    test_split: float = 0.2,
+    random_state: int = 0,
+    batch_size: int = 32,
+    plot: bool = True,
+) -> pd.DataFrame:
 
     train_idx, test_idx = train_test_split(
-        np.arange(len(real_data)),
-        test_size=test_split,
-        random_state=random_state)
+        np.arange(len(real_data)), test_size=test_split, random_state=random_state
+    )
 
     real_test_data = real_data[test_idx]
 
     synt_train_data = synthetic_data[train_idx]
-    
-    # real data
-    real_test_ds = create_supervised_dataset(real_test_data) 
-    real_test_dl = DataLoader(real_test_ds, batch_size=batch_size, shuffle=False)
 
+    # real data
+    real_test_ds = create_supervised_dataset(real_test_data)
+    real_test_dl = DataLoader(real_test_ds, batch_size=batch_size, shuffle=False)
 
     # synthetic
     sync_train_ds = create_supervised_dataset(synt_train_data)
@@ -78,7 +75,7 @@ def compute_predictive_scores(
             num_steps=num_steps,
             plot=plot,
             random_state=random_state,
-            enable_progress_bar=False
+            enable_progress_bar=False,
         )
 
     with torch.no_grad():
@@ -101,16 +98,18 @@ class PredictiveEvaluator(Evaluator):
     hidden_dim: int = 24
     lr: float = 1e-3
 
-
     def build_model(self) -> LSTMRegressor:
         reg = LSTMRegressor(
             n_feat=self.n_feat,
             hidden_dim=self.hidden_dim,
             output_dim=self.n_feat,
-            lr=self.lr).apply(init_linear_weights)
+            lr=self.lr,
+        ).apply(init_linear_weights)
         return reg
 
-    def eval(self, real_data: np.ndarray, synthetic_data: np.ndarray) -> Dict[str, float]:
+    def eval(
+        self, real_data: np.ndarray, synthetic_data: np.ndarray
+    ) -> Dict[str, float]:
         reg = self.build_model()
         predictive_scores = compute_predictive_scores(
             real_data,
@@ -118,5 +117,6 @@ class PredictiveEvaluator(Evaluator):
             reg,
             random_state=self.random_state,
             num_steps=self.num_steps,
-            plot=False)
+            plot=False,
+        )
         return predictive_scores

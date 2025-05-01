@@ -11,10 +11,10 @@ from genai4t.forecasting.predictors.util import get_prediction_splitter
 
 class ChronosPredictor(Predictor):
     """A predictor that uses the Chronos T5 model for time series forecasting.
-    
+
     Chronos is a language model-based time series forecasting model that uses T5 architecture.
     This predictor wraps the Chronos model to make it compatible with GluonTS's predictor interface.
-    
+
     Attributes:
         prediction_length (int): Number of time steps to predict into the future.
         pipeline (ChronosPipeline): The underlying Chronos model pipeline.
@@ -23,7 +23,7 @@ class ChronosPredictor(Predictor):
         prediction_splitter: A transform that splits the input data into context and prediction windows.
         field_name (str): The field name used for the target time series data.
     """
-    
+
     def __init__(
         self,
         context_length: int,
@@ -42,19 +42,18 @@ class ChronosPredictor(Predictor):
         self.batch_size = batch_size
 
         self.prediction_splitter = get_prediction_splitter(
-            context_length=context_length,
-            prediction_length=prediction_length
-            )
+            context_length=context_length, prediction_length=prediction_length
+        )
         self.field_name = "past_target"
 
     def predict(self, dataset: Dataset, num_samples: Optional[int] = None):
         """Generate forecasts for the input dataset.
-        
+
         Args:
             dataset (Dataset): The input dataset containing time series data.
             num_samples (Optional[int]): Number of sample paths to generate for each time series.
                 If None, uses the default number of samples from the model.
-                
+
         Yields:
             SampleForecast: Forecast objects containing the predicted samples for each time series
                 in the dataset.
@@ -63,9 +62,9 @@ class ChronosPredictor(Predictor):
             dataset,
             transform=self.prediction_splitter,
             batch_size=self.batch_size,
-            stack_fn=batchify
+            stack_fn=batchify,
         )
-        
+
         for batch in inference_data_loader:
             batch_samples = self.pipeline.predict(
                 context=batch[self.field_name],
@@ -77,9 +76,11 @@ class ChronosPredictor(Predictor):
                 forecast = SampleForecast(
                     samples,
                     start_date=batch[FieldName.FORECAST_START][i],
-                    item_id=batch[FieldName.ITEM_ID][i]
-                    if FieldName.ITEM_ID in batch
-                    else None,
+                    item_id=(
+                        batch[FieldName.ITEM_ID][i]
+                        if FieldName.ITEM_ID in batch
+                        else None
+                    ),
                     info=batch["info"][i] if "info" in batch else None,
                 )
                 yield forecast

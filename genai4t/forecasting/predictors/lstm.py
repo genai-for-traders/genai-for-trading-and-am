@@ -4,11 +4,12 @@ import torch
 from genai4t.forecasting.predictors.util import RobustScaler, BaseEstimator
 from typing import Optional, Dict, Any
 
+
 class LSTMModel(BaseLightningModule):
     """A PyTorch Lightning module implementing an LSTM-based time series forecasting model.
-    
+
     This model uses an LSTM network followed by an MLP to predict future values in a time series.
-    
+
     Attributes:
         context_length (int): Number of past time steps used as input for prediction.
         prediction_length (int): Number of future time steps to predict.
@@ -17,7 +18,7 @@ class LSTMModel(BaseLightningModule):
         lr (float): Learning rate for optimization.
         weight_decay (float): Weight decay (L2 penalty) for optimization.
     """
-    
+
     def __init__(
         self,
         context_length: int,
@@ -25,34 +26,34 @@ class LSTMModel(BaseLightningModule):
         hidden_dim: int,
         num_layers: int = 2,
         lr: float = 1e-3,
-        weight_decay: float = 0.):
+        weight_decay: float = 0.0,
+    ):
         super().__init__(lr=lr, weight_decay=weight_decay)
         self.save_hyperparameters()
-        
+
         self.lstm = nn.LSTM(1, hidden_dim, batch_first=True, num_layers=num_layers)
         self.mlp = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, prediction_length)
+            nn.Linear(hidden_dim, prediction_length),
         )
         self._loss = nn.MSELoss()
         self.prediction_length = prediction_length
         self.scaler = RobustScaler(keepdim=True)
         self.context_length = context_length
-        
-    
+
     def forward(self, past_target: torch.Tensor) -> torch.Tensor:
         """Forward pass of the LSTM model.
-        
+
         Args:
             past_target: Input tensor of shape [batch_size, context_length] containing past time series values.
-            
+
         Returns:
             Tensor of shape [batch_size, 1, prediction_length] containing the predicted future values.
         """
         scaled_past_target, loc, scale = self.scaler(past_target)
         scaled_past_target: torch.Tensor = scaled_past_target[..., torch.newaxis]
-            
+
         hidden_states, _ = self.lstm(scaled_past_target)
         last_state: torch.Tensor = hidden_states[:, -1]
         scaled_y = self.mlp(last_state)
@@ -62,27 +63,27 @@ class LSTMModel(BaseLightningModule):
 
     def step(self, batch):
         """Compute the loss for a single training step.
-        
+
         Args:
             batch: Dictionary containing 'past_target' and 'future_target' tensors.
-            
+
         Returns:
             The computed MSE loss between predictions and true values.
         """
-        past_target = batch['past_target']
-        future_target = batch['future_target'][:, torch.newaxis]
+        past_target = batch["past_target"]
+        future_target = batch["future_target"][:, torch.newaxis]
         yhat = self.forward(past_target)
         assert yhat.shape == future_target.shape
         loss = self._loss(yhat, future_target)
         return loss
-    
+
 
 class LSTMEstimator(BaseEstimator):
     """Estimator class for training and using the LSTM forecasting model.
-    
+
     This class handles the creation and training of the LSTM model, providing a high-level
     interface for time series forecasting tasks.
-    
+
     Attributes:
         prediction_length (int): Number of future time steps to predict.
         context_length (int): Number of past time steps used as input for prediction.
@@ -95,7 +96,7 @@ class LSTMEstimator(BaseEstimator):
         num_batches_per_epoch (int): Number of batches per training epoch.
         trainer_kwargs (Optional[Dict[str, Any]]): Additional arguments for the PyTorch Lightning trainer.
     """
-    
+
     def __init__(
         self,
         prediction_length: int,
@@ -124,7 +125,7 @@ class LSTMEstimator(BaseEstimator):
 
     def create_lightning_module(self) -> LSTMModel:
         """Create and return an instance of the LSTM model.
-        
+
         Returns:
             An initialized LSTMModel instance with the configured parameters.
         """
@@ -134,5 +135,5 @@ class LSTMEstimator(BaseEstimator):
             hidden_dim=self.hidden_dim,
             num_layers=self.num_layers,
             lr=self.lr,
-            weight_decay=self.weight_decay
+            weight_decay=self.weight_decay,
         )

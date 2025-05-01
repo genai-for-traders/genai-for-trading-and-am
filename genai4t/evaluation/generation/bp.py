@@ -8,42 +8,41 @@ from typing import Tuple
 
 
 def evaluate(
-        real_data: np.ndarray,
-        synthetic_data_iters: np.ndarray,
-        random_state: int,
-        max_iters: int = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    real_data: np.ndarray,
+    synthetic_data_iters: np.ndarray,
+    random_state: int,
+    max_iters: int = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Predictive
-    predictive_eval = PredictiveEvaluator(n_feat=real_data.shape[-1], random_state=random_state)
+    predictive_eval = PredictiveEvaluator(
+        n_feat=real_data.shape[-1], random_state=random_state
+    )
     predictive_scores = evaluate_iterations(
         predictive_eval,
         real_data,
         synthetic_data_iters,
         random_state=random_state,
-        max_iters=max_iters)
-    predictive_scores = (
-        predictive_scores
-        .describe()
-        .T)
+        max_iters=max_iters,
+    )
+    predictive_scores = predictive_scores.describe().T
 
-    # Classification 
+    # Classification
 
-    discriminator_eval = DiscriminatorEvaluator(n_feat=real_data.shape[-1], random_state=random_state)
+    discriminator_eval = DiscriminatorEvaluator(
+        n_feat=real_data.shape[-1], random_state=random_state
+    )
 
     discriminator_scores = evaluate_iterations(
         discriminator_eval,
         real_data,
         synthetic_data_iters,
         random_state=random_state,
-        max_iters=max_iters)
+        max_iters=max_iters,
+    )
 
-    discriminator_scores = (
-        discriminator_scores
-        .describe()
-        .T
-        )
+    discriminator_scores = discriminator_scores.describe().T
 
     return predictive_scores, discriminator_scores
-
 
 
 def visualize(real_data: np.ndarray, synthetic_data: np.ndarray):

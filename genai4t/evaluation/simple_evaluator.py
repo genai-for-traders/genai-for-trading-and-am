@@ -47,8 +47,8 @@ from gluonts.evaluation.metrics import (
     quantile_loss,
     smape,
     num_masked_values,
-
 )
+
 
 def worker_function(evaluator: "Evaluator", inp: tuple):
     ts, forecast = inp
@@ -64,8 +64,7 @@ def aggregate_all(
     Both `nan` and `inf` possible in aggregate metrics.
     """
     return {
-        key: metric_per_ts[key].agg(agg, skipna=False)
-        for key, agg in agg_funs.items()
+        key: metric_per_ts[key].agg(agg, skipna=False) for key, agg in agg_funs.items()
     }
 
 
@@ -79,8 +78,7 @@ def aggregate_no_nan(
     metric resulted in `nan`.
     """
     return {
-        key: metric_per_ts[key].agg(agg, skipna=True)
-        for key, agg in agg_funs.items()
+        key: metric_per_ts[key].agg(agg, skipna=True) for key, agg in agg_funs.items()
     }
 
 
@@ -97,14 +95,11 @@ def aggregate_valid(
         np.ma.masked_invalid
     )
     return {
-        key: metric_per_ts[key].agg(agg, skipna=True)
-        for key, agg in agg_funs.items()
+        key: metric_per_ts[key].agg(agg, skipna=True) for key, agg in agg_funs.items()
     }
 
 
-def validate_forecast(
-    forecast: Forecast, quantiles: Iterable[Quantile]
-) -> bool:
+def validate_forecast(forecast: Forecast, quantiles: Iterable[Quantile]) -> bool:
     """
     Validates a Forecast object by checking it for `NaN` values. The supplied
     quantiles and mean (if available) are checked.
@@ -128,9 +123,7 @@ def validate_forecast(
         mean_fcst = None
 
     valid = ~np.isnan(mean_fcst).any() if mean_fcst is not None else True
-    valid &= all(
-        ~np.isnan(forecast.quantile(q.value)).any() for q in quantiles
-    )
+    valid &= all(~np.isnan(forecast.quantile(q.value)).any() for q in quantiles)
 
     return valid
 
@@ -317,18 +310,14 @@ class Evaluator:
         np.ndarray
             time series cut in the Forecast object dates
         """
-        assert forecast.index.intersection(time_series.index).equals(
-            forecast.index
-        ), (
+        assert forecast.index.intersection(time_series.index).equals(forecast.index), (
             "Cannot extract prediction target since the index of forecast is"
             " outside the index of target\nIndex of forecast:"
             f" {forecast.index}\n Index of target: {time_series.index}"
         )
 
         # cut the time series using the dates of the forecast object
-        return np.atleast_1d(
-            np.squeeze(time_series.loc[forecast.index].transpose())
-        )
+        return np.atleast_1d(np.squeeze(time_series.loc[forecast.index].transpose()))
 
     # This method is needed for the owa calculation. It extracts the training
     # sequence from the Series or DataFrame to a numpy array
@@ -349,9 +338,7 @@ class Evaluator:
             time series without the forecast dates
         """
 
-        assert forecast.index.intersection(time_series.index).equals(
-            forecast.index
-        ), (
+        assert forecast.index.intersection(time_series.index).equals(forecast.index), (
             "Index of forecast is outside the index of target\nIndex of"
             f" forecast: {forecast.index}\n Index of target:"
             f" {time_series.index}"
@@ -376,9 +363,7 @@ class Evaluator:
         return {
             "item_id": forecast.item_id,
             "forecast_start": forecast.start_date,
-            "MSE": (
-                mse(pred_target, mean_fcst) if mean_fcst is not None else None
-            ),
+            "MSE": (mse(pred_target, mean_fcst) if mean_fcst is not None else None),
             "abs_error": abs_error(pred_target, median_fcst),
             "abs_target_sum": abs_target_sum(pred_target),
             "abs_target_mean": abs_target_mean(pred_target),
@@ -478,9 +463,7 @@ class Evaluator:
             metrics[f"QuantileLoss[{quantile}]"] = quantile_loss(
                 pred_target, forecast_quantile, quantile.value
             )
-            metrics[f"Coverage[{quantile}]"] = coverage(
-                pred_target, forecast_quantile
-            )
+            metrics[f"Coverage[{quantile}]"] = coverage(pred_target, forecast_quantile)
 
         return metrics
 
@@ -531,17 +514,11 @@ class Evaluator:
             )
 
         totals["mean_absolute_QuantileLoss"] = np.array(
-            [
-                totals[f"QuantileLoss[{quantile}]"]
-                for quantile in self.quantiles
-            ]
+            [totals[f"QuantileLoss[{quantile}]"] for quantile in self.quantiles]
         ).mean()
 
         totals["mean_wQuantileLoss"] = np.array(
-            [
-                totals[f"wQuantileLoss[{quantile}]"]
-                for quantile in self.quantiles
-            ]
+            [totals[f"wQuantileLoss[{quantile}]"] for quantile in self.quantiles]
         ).mean()
 
         totals["MAE_Coverage"] = np.mean(
@@ -555,8 +532,7 @@ class Evaluator:
         if self.calculate_owa:
             if totals["sMAPE_naive2"] == 0 or totals["MASE_naive2"] == 0:
                 logging.warning(
-                    "OWA cannot be computed as Naive2 yields an sMAPE or MASE"
-                    " of 0."
+                    "OWA cannot be computed as Naive2 yields an sMAPE or MASE" " of 0."
                 )
                 totals["OWA"] = np.nan
             else:

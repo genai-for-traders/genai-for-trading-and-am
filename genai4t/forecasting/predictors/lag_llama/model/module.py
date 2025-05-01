@@ -319,11 +319,15 @@ class CausalSelfAttention(nn.Module):
                 # When kv_cache is in use and we're working with only the last token (T = 1 instead of full sequence length `true_seq_len``)
                 # Use the full sequence length for positional embeddings (true_seq_len)
                 # q is the query vector for the last token, so it's position is the last index (-1)
-                cos, sin = self.rotary_emb(device=v.device, dtype=v.dtype, seq_len=true_seq_len)
+                cos, sin = self.rotary_emb(
+                    device=v.device, dtype=v.dtype, seq_len=true_seq_len
+                )
                 q, _ = apply_rotary_pos_emb(q, k, cos, sin, position_ids=[-1])
-                
+
                 # k is the key matrix after concatenation with cache, so no position_ids
-                cos, sin = self.rotary_emb(device=v.device, dtype=v.dtype, seq_len=true_seq_len)
+                cos, sin = self.rotary_emb(
+                    device=v.device, dtype=v.dtype, seq_len=true_seq_len
+                )
                 _, k = apply_rotary_pos_emb(q, k, cos, sin, position_ids=None)
             else:
                 cos, sin = self.rotary_emb(device=v.device, dtype=v.dtype, seq_len=T)

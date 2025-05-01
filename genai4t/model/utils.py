@@ -10,7 +10,8 @@ from matplotlib import pyplot as plt
 from lightning.pytorch.loggers import CSVLogger
 from genai4t.plot_style import plot_style
 
-MODEL_FILENAME = 'model.ckpt'
+MODEL_FILENAME = "model.ckpt"
+
 
 class SampleTimeSeries(nn.Module):
     def __init__(self, seq_len: int, n_feat: int):
@@ -42,29 +43,29 @@ def plot_train_progress(logdir: str, ax: plt = None):
     """
     if ax is None:
         _, ax = plt.subplots(figsize=(15, 5))
-    metrics = pd.read_csv(f'{logdir}/lightning_logs/version_0/metrics.csv')
-    metrics = metrics.dropna(subset=['train_loss_epoch'])
-    # we skip the first epoch because it is normally much larger and the plot 
+    metrics = pd.read_csv(f"{logdir}/lightning_logs/version_0/metrics.csv")
+    metrics = metrics.dropna(subset=["train_loss_epoch"])
+    # we skip the first epoch because it is normally much larger and the plot
     # does not good
-    metrics.iloc[1: ].plot(x='epoch', y='train_loss_epoch', ax=ax)
+    metrics.iloc[1:].plot(x="epoch", y="train_loss_epoch", ax=ax)
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Training Loss")
     ax.set_title("Training Loss over time")
     plot_style.apply_grid(ax)
     plot_style.apply_plot_style(ax)
 
-        
 
 def fit_model(
-        logdir: str,
-        model: nn.Module,
-        train_dl: DataLoader,
-        num_steps: int,
-        reset_logdir: bool = True,
-        valid_dl: DataLoader = None,
-        plot: bool = True,
-        random_state: int = None,
-        **trainer_args: Dict[str, Any]) -> L.Trainer:
+    logdir: str,
+    model: nn.Module,
+    train_dl: DataLoader,
+    num_steps: int,
+    reset_logdir: bool = True,
+    valid_dl: DataLoader = None,
+    plot: bool = True,
+    random_state: int = None,
+    **trainer_args: Dict[str, Any],
+) -> L.Trainer:
     """
     Train a PyTorch Lightning model and log training progress.
 
@@ -83,24 +84,25 @@ def fit_model(
         L.Trainer: The fitted Lightning Trainer instance.
     """
     total_n_params = get_num_params(model)
-    print(f'total_n_params: {total_n_params}')
-    
+    print(f"total_n_params: {total_n_params}")
+
     if reset_logdir and os.path.exists(logdir):
-        print(f'deleting {logdir}..')
+        print(f"deleting {logdir}..")
         shutil.rmtree(logdir)
 
-    deterministic = random_state is not None 
+    deterministic = random_state is not None
     if deterministic:
         L.seed_everything(random_state)
- 
+
     logger = CSVLogger(logdir)
     trainer = L.Trainer(
-        max_steps=num_steps, 
+        max_steps=num_steps,
         default_root_dir=logdir,
         **trainer_args,
         deterministic=deterministic,
-        logger=logger)
-    
+        logger=logger,
+    )
+
     trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=valid_dl)
 
     if plot:
@@ -138,5 +140,3 @@ def init_linear_weights(m: nn.Module) -> None:
             nn.init.xavier_uniform_(layer.weight)
             if layer.bias is not None:
                 nn.init.zeros_(layer.bias)
-
-

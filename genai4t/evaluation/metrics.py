@@ -1,22 +1,23 @@
 import numpy as np
 from sklearn import metrics
 from typing import Dict, Union, List
-from gluonts.model.forecast import Forecast 
+from gluonts.model.forecast import Forecast
 import pandas as pd
 from .simple_evaluator import Evaluator
 from scipy.stats import spearmanr
 
 FORECAST_METRIC_NAMES = [
- 'MASE',
- 'MAPE',
- 'sMAPE',
- 'RMSE',
- 'wQuantileLoss[0.5]',
- 'mean_wQuantileLoss'
+    "MASE",
+    "MAPE",
+    "sMAPE",
+    "RMSE",
+    "wQuantileLoss[0.5]",
+    "mean_wQuantileLoss",
 ]
 
 
 MetricsSummary = Dict[str, Union[float, int]]
+
 
 def compute_mape(target: np.ndarray, yhat: np.ndarray) -> float:
     """
@@ -59,19 +60,14 @@ def compute_regression_scores(target: np.ndarray, yhat: np.ndarray) -> MetricsSu
     mae = metrics.mean_absolute_error(target, yhat)
     mape = compute_mape(target, yhat)
 
-    scores = {
-        'MSE': mse,
-        'MAE': mae,
-        'MAPE': mape
-    }
+    scores = {"MSE": mse, "MAE": mae, "MAPE": mape}
 
     return scores
 
 
 def compute_classification_scores(
-        labels: np.ndarray,
-        yhat: np.ndarray,
-        threshold: float = 0.5) -> MetricsSummary:
+    labels: np.ndarray, yhat: np.ndarray, threshold: float = 0.5
+) -> MetricsSummary:
     """
     Compute various classification metrics including AUC, precision, recall, F1, and accuracy.
 
@@ -90,14 +86,16 @@ def compute_classification_scores(
         Dictionary containing AUC, precision, recall, F1, and accuracy scores
     """
     bin_yhat = (yhat >= threshold).astype(np.int32)
-    precision, recall, f1, _ = metrics.precision_recall_fscore_support(labels, bin_yhat, average='binary')
+    precision, recall, f1, _ = metrics.precision_recall_fscore_support(
+        labels, bin_yhat, average="binary"
+    )
 
     clf_scores = {
-        'auc': metrics.roc_auc_score(labels, yhat),
-        'precision': precision,
-        'recall': recall,
-        'f1': f1,
-        'acc': metrics.accuracy_score(labels, bin_yhat)
+        "auc": metrics.roc_auc_score(labels, yhat),
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "acc": metrics.accuracy_score(labels, bin_yhat),
     }
 
     return clf_scores
@@ -139,8 +137,9 @@ def compute_log_cum_returns(log_returns: pd.Series) -> pd.Series:
     pd.Series
         Series of cumulative returns
     """
-    log_cum_returns =  np.exp(log_returns.cumsum()) - 1
+    log_cum_returns = np.exp(log_returns.cumsum()) - 1
     return log_cum_returns
+
 
 def compute_investment_scores(target: pd.Series, yhat: pd.Series) -> MetricsSummary:
     """
@@ -174,7 +173,7 @@ def compute_investment_scores(target: pd.Series, yhat: pd.Series) -> MetricsSumm
         "std": r_std,
         "sharpe": r_sharpe,
         "cum_return": cum_return,
-        "spearman_corr": spearman_corr
+        "spearman_corr": spearman_corr,
     }
     return scores
 
@@ -195,7 +194,7 @@ def get_cumulative_returns(target: pd.Series, yhat: pd.Series) -> pd.DataFrame:
     pd.DataFrame
         DataFrame containing cumulative returns
     """
-    sign =  np.sign(yhat)
+    sign = np.sign(yhat)
     returns = target * sign
     cum_return = compute_log_cum_returns(returns)
     return cum_return.to_frame("cum_return")

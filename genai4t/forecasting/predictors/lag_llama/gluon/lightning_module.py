@@ -237,7 +237,9 @@ class LagLlamaLightningModule(LightningModule):
                 params, loc, scale = self.model(
                     *args,
                     past_time_feat=past_time_feat if self.time_feat else None,
-                    future_time_feat=future_time_feat[..., : t + 1, :] if self.time_feat else None,
+                    future_time_feat=(
+                        future_time_feat[..., : t + 1, :] if self.time_feat else None
+                    ),
                     past_target=past_target,
                     past_observed_values=past_observed_values,
                     use_kv_cache=self.use_kv_cache,
@@ -248,22 +250,21 @@ class LagLlamaLightningModule(LightningModule):
                 ]  # Take the last timestep predicted. Each tensor is of shape (#bsz, 1)
                 # Singular distribution is used for getting the greedy prediction (mean)
                 distr = self.model.distr_output.distribution(sliced_params, loc, scale)
-                greedy_prediction = distr.mean # (#bsz, 1)
+                greedy_prediction = distr.mean  # (#bsz, 1)
 
                 repeated_sliced_params = [
-                        p[:, -1:].repeat_interleave(
-                        self.model.num_parallel_samples, 0
-                    ) for p in params
-                ] # Take the last timestep predicted and repeat for number of samples. Each tensor is of shape (#bsz*#parallel_samples, 1)
-                repeated_loc = loc.repeat_interleave(
-                        self.model.num_parallel_samples, 0
-                    )
+                    p[:, -1:].repeat_interleave(self.model.num_parallel_samples, 0)
+                    for p in params
+                ]  # Take the last timestep predicted and repeat for number of samples. Each tensor is of shape (#bsz*#parallel_samples, 1)
+                repeated_loc = loc.repeat_interleave(self.model.num_parallel_samples, 0)
                 repeated_scale = scale.repeat_interleave(
-                        self.model.num_parallel_samples, 0
-                    )
+                    self.model.num_parallel_samples, 0
+                )
                 # Repeated distribution is used for getting the parallel samples
                 # (distr.sample([self.model.num_parallel_samples]) seems to give terrible results)
-                repeated_distr = self.model.distr_output.distribution(repeated_sliced_params, repeated_loc, repeated_scale)
+                repeated_distr = self.model.distr_output.distribution(
+                    repeated_sliced_params, repeated_loc, repeated_scale
+                )
                 sample = repeated_distr.sample()  # (#bsz*#parallel_samples, 1)
                 if self.nonnegative_pred_samples:
                     sample = F.relu(sample)
@@ -275,11 +276,19 @@ class LagLlamaLightningModule(LightningModule):
                 )
         else:
             # Original probabilistic forecasting: Duplicate input, `num_parallel_samples` forward passes per step, sample each distribution once, add samples to context.
-            repeated_past_target = past_target.repeat_interleave(self.model.num_parallel_samples, 0)
-            repeated_past_observed_values = past_observed_values.repeat_interleave(self.model.num_parallel_samples, 0)
+            repeated_past_target = past_target.repeat_interleave(
+                self.model.num_parallel_samples, 0
+            )
+            repeated_past_observed_values = past_observed_values.repeat_interleave(
+                self.model.num_parallel_samples, 0
+            )
             if self.time_feat:
-                repeated_past_time_feat = past_time_feat.repeat_interleave(self.model.num_parallel_samples, 0)
-                repeated_future_time_feat = future_time_feat.repeat_interleave(self.model.num_parallel_samples, 0)
+                repeated_past_time_feat = past_time_feat.repeat_interleave(
+                    self.model.num_parallel_samples, 0
+                )
+                repeated_future_time_feat = future_time_feat.repeat_interleave(
+                    self.model.num_parallel_samples, 0
+                )
 
             for t in range(self.prediction_length):
                 if self.time_feat:
@@ -320,7 +329,6 @@ class LagLlamaLightningModule(LightningModule):
             (-1, self.model.num_parallel_samples, self.prediction_length)
             + self.model.distr_output.event_shape,
         )
-
 
     # train
     def _compute_loss(self, batch, do_not_average=False, return_observed_values=False):

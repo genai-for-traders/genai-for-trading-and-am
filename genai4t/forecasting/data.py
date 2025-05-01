@@ -13,6 +13,24 @@ def split_train_test_datasets(
         prediction_length: int,
         test_split_date: str,
         freq: str) -> Tuple[Dataset, Dataset]:
+    """
+    Split a time series dataset into training and test sets for forecasting.
+
+    This function takes a pandas DataFrame containing time series data and splits it into
+    training and test datasets using a specified split date. The test dataset is generated
+    using rolling windows to evaluate the model's forecasting performance.
+
+    Args:
+        data (pd.DataFrame): The input time series data as a pandas DataFrame.
+        prediction_length (int): The number of time steps to predict into the future.
+        test_split_date (str): The date string indicating where to split the data into train and test sets.
+        freq (str): The frequency of the time series data (e.g., 'D' for daily, 'H' for hourly).
+
+    Returns:
+        Tuple[Dataset, Dataset]: A tuple containing:
+            - The training dataset
+            - The test dataset with rolling windows for evaluation
+    """
     ds = PandasDataset(dict(data))
     # Split data into training and test sets based on configured split date
     test_period = pd.Period(test_split_date, freq=freq)
@@ -32,6 +50,16 @@ def split_train_test_datasets(
 
 
 def highlight_entry(entry: Dict[str, Any], color: str):
+    """
+    Highlight a specific time period in a matplotlib plot.
+
+    This function adds a colored background span to a matplotlib plot to highlight
+    a specific time period in the time series data.
+
+    Args:
+        entry (Dict[str, Any]): A dictionary containing time series entry data with 'start' and 'target' keys.
+        color (str): The color to use for highlighting (e.g., 'green', 'blue', 'red').
+    """
     start = entry["start"]
     end = entry["start"] + len(entry["target"])
     plt.axvspan(start, end, facecolor=color, alpha=0.2)
@@ -42,6 +70,19 @@ def plot_dataset_splitting(
         test_pairs: Dataset, 
         figsize=(20, 3),
         grid=True):
+    """
+    Visualize the train-test split of a time series dataset.
+
+    This function creates plots to visualize how the original dataset was split into
+    training and test sets. It shows the original time series along with highlighted
+    regions for test inputs and test targets.
+
+    Args:
+        original_dataset (Dataset): The original time series dataset.
+        test_pairs (Dataset): The test dataset containing input-target pairs.
+        figsize (tuple, optional): The size of the figure (width, height) in inches. Defaults to (20, 3).
+        grid (bool, optional): Whether to show grid lines on the plot. Defaults to True.
+    """
     for original_entry in islice(original_dataset, 2):
         name = original_entry['item_id']
         for test_input, test_label in islice(test_pairs, 3):

@@ -24,6 +24,20 @@ from gluonts.dataset.common import Dataset
 
 
 def get_training_splitter(context_length: int, prediction_length: int) -> InstanceSplitter:
+    """
+    Creates an InstanceSplitter for training data that splits time series into training instances.
+
+    Args:
+        context_length (int): Length of the past context window used for prediction
+        prediction_length (int): Length of the future prediction window
+
+    Returns:
+        InstanceSplitter: Configured instance splitter for training data that:
+            - Uses target field for time series values
+            - Samples 1 instance per time series
+            - Ensures minimum future length matches prediction_length
+            - Creates windows of context_length for past and prediction_length for future
+    """
     training_splitter = InstanceSplitter(
         target_field=FieldName.TARGET,  # Field containing the time series values
         is_pad_field=FieldName.IS_PAD,  # Field indicating padded values
@@ -43,6 +57,19 @@ def get_prediction_splitter(
         context_length: int,
         prediction_length: int,
 ) -> InstanceSplitter:
+    """
+    Creates an InstanceSplitter for prediction/inference that splits time series for forecasting.
+
+    Args:
+        context_length (int): Length of the past context window used for prediction
+        prediction_length (int): Length of the future prediction window
+
+    Returns:
+        InstanceSplitter: Configured instance splitter for prediction that:
+            - Uses target field for time series values
+            - Uses TestSplitSampler for inference
+            - Creates windows of context_length for past and prediction_length for future
+    """
     prediction_splitter = InstanceSplitter(
             target_field=FieldName.TARGET,
             is_pad_field=FieldName.IS_PAD,
@@ -113,6 +140,21 @@ class RobustScaler(Scaler):
 
 
 class BaseEstimator(PyTorchLightningEstimator):
+    """
+    Base estimator class for time series forecasting models using PyTorch Lightning.
+
+    This class provides common functionality for training and prediction of time series models,
+    including data loading, transformation, and predictor creation.
+
+    Parameters:
+        prediction_length (int): Length of the prediction horizon
+        context_length (int): Length of the context window used for prediction
+        num_steps (int): Number of training steps
+        batch_size (int): Size of training batches (default: 128)
+        num_batches_per_epoch (int): Number of batches per training epoch (default: 100)
+        trainer_kwargs (Optional[Dict[str, Any]]): Additional arguments for the PyTorch Lightning trainer
+    """
+
     def __init__(
         self,
         prediction_length: int,
@@ -134,6 +176,12 @@ class BaseEstimator(PyTorchLightningEstimator):
         
 
     def create_transformation(self) -> Transformation:
+        """
+        Creates the data transformation pipeline.
+
+        Returns:
+            Transformation: A chain of transformations to be applied to the data
+        """
         # No transformation applied
         return Chain([Identity()])
 
@@ -142,7 +190,16 @@ class BaseEstimator(PyTorchLightningEstimator):
         transformation: Transformation,
         trained_model: L.LightningModule,
     ) -> PyTorchPredictor:
+        """
+        Creates a predictor for making forecasts with the trained model.
 
+        Args:
+            transformation (Transformation): Data transformation pipeline
+            trained_model (L.LightningModule): Trained PyTorch Lightning model
+
+        Returns:
+            PyTorchPredictor: Configured predictor for making forecasts
+        """
         prediction_splitter = get_prediction_splitter(
             context_length=self.context_length,
             prediction_length=self.prediction_length)
@@ -161,6 +218,21 @@ class BaseEstimator(PyTorchLightningEstimator):
         module: L.LightningModule,
         **kwargs,
     ) -> Iterable:
+        """
+        Creates a data loader for training the model.
+
+        Args:
+            data (Dataset): Training dataset
+            module (L.LightningModule): PyTorch Lightning module
+            **kwargs: Additional arguments
+
+        Returns:
+            Iterable: Configured training data loader that:
+                - Caches the dataset for faster training
+                - Batches the data according to batch_size
+                - Applies the training splitter transformation
+                - Processes num_batches_per_epoch batches per epoch
+        """
         training_splitter = get_training_splitter(self.context_length, self.prediction_length)
         # Create the training data loader
         # This handles batching and preprocessing of training data
@@ -179,6 +251,21 @@ class BaseEstimator(PyTorchLightningEstimator):
         module: L.LightningModule,
         **kwargs,
     ) -> Iterable:
+        """
+        Creates a data loader for validation during training.
+
+        Args:
+            data (Dataset): Validation dataset
+            module (L.LightningModule): PyTorch Lightning module
+            **kwargs: Additional arguments
+
+        Returns:
+            Iterable: Configured validation data loader that:
+                - Caches the dataset for faster processing
+                - Batches the data according to batch_size
+                - Applies the training splitter transformation
+                - Processes num_batches_per_epoch batches per epoch
+        """
         # Create the training data loader
         # This handles batching and preprocessing of training data
         training_splitter = get_training_splitter(self.context_length, self.prediction_length)

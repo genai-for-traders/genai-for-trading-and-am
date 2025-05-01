@@ -19,12 +19,42 @@ FORECAST_METRIC_NAMES = [
 MetricsSummary = Dict[str, Union[float, int]]
 
 def compute_mape(target: np.ndarray, yhat: np.ndarray) -> float:
+    """
+    Compute Mean Absolute Percentage Error (MAPE) between target and predicted values.
+
+    Parameters
+    ----------
+    target : np.ndarray
+        Array of actual target values
+    yhat : np.ndarray
+        Array of predicted values
+
+    Returns
+    -------
+    float
+        Mean Absolute Percentage Error as a percentage
+    """
     pct_error = (target - yhat) / target
     abs_error = np.abs(pct_error)
     return abs_error.mean() * 100
 
 
 def compute_regression_scores(target: np.ndarray, yhat: np.ndarray) -> MetricsSummary:
+    """
+    Compute various regression metrics including MSE, MAE, and MAPE.
+
+    Parameters
+    ----------
+    target : np.ndarray
+        Array of actual target values
+    yhat : np.ndarray
+        Array of predicted values
+
+    Returns
+    -------
+    MetricsSummary
+        Dictionary containing MSE, MAE, and MAPE scores
+    """
     mse = metrics.mean_squared_error(target, yhat)
     mae = metrics.mean_absolute_error(target, yhat)
     mape = compute_mape(target, yhat)
@@ -42,7 +72,23 @@ def compute_classification_scores(
         labels: np.ndarray,
         yhat: np.ndarray,
         threshold: float = 0.5) -> MetricsSummary:
+    """
+    Compute various classification metrics including AUC, precision, recall, F1, and accuracy.
 
+    Parameters
+    ----------
+    labels : np.ndarray
+        Array of true binary labels
+    yhat : np.ndarray
+        Array of predicted probabilities
+    threshold : float, optional
+        Threshold for converting probabilities to binary predictions, by default 0.5
+
+    Returns
+    -------
+    MetricsSummary
+        Dictionary containing AUC, precision, recall, F1, and accuracy scores
+    """
     bin_yhat = (yhat >= threshold).astype(np.int32)
     precision, recall, f1, _ = metrics.precision_recall_fscore_support(labels, bin_yhat, average='binary')
 
@@ -58,6 +104,21 @@ def compute_classification_scores(
 
 
 def compute_forecast_scores(tss: List[pd.DataFrame], forecasts: List[Forecast]):
+    """
+    Compute forecast evaluation metrics using the GluonTS Evaluator.
+
+    Parameters
+    ----------
+    tss : List[pd.DataFrame]
+        List of time series dataframes
+    forecasts : List[Forecast]
+        List of forecast objects from GluonTS
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing forecast metrics including MASE, MAPE, sMAPE, RMSE, and quantile losses
+    """
     evaluator = Evaluator(quantiles=[0.1, 0.5, 0.9])
     forecast_metrics_dict, _ = evaluator(tss, forecasts)
     forecast_metrics = pd.DataFrame([forecast_metrics_dict])[FORECAST_METRIC_NAMES]
@@ -65,10 +126,39 @@ def compute_forecast_scores(tss: List[pd.DataFrame], forecasts: List[Forecast]):
 
 
 def compute_log_cum_returns(log_returns: pd.Series) -> pd.Series:
+    """
+    Compute cumulative returns from log returns.
+
+    Parameters
+    ----------
+    log_returns : pd.Series
+        Series of log returns
+
+    Returns
+    -------
+    pd.Series
+        Series of cumulative returns
+    """
     log_cum_returns =  np.exp(log_returns.cumsum()) - 1
     return log_cum_returns
 
 def compute_investment_scores(target: pd.Series, yhat: pd.Series) -> MetricsSummary:
+    """
+    Compute investment performance metrics including mean return, standard deviation,
+    Sharpe ratio, cumulative return, and Spearman correlation.
+
+    Parameters
+    ----------
+    target : pd.Series
+        Series of actual returns
+    yhat : pd.Series
+        Series of predicted returns
+
+    Returns
+    -------
+    MetricsSummary
+        Dictionary containing investment performance metrics
+    """
     sign = np.sign(yhat)
     returns = target * sign
 
@@ -89,8 +179,22 @@ def compute_investment_scores(target: pd.Series, yhat: pd.Series) -> MetricsSumm
     return scores
 
 
-
 def get_cumulative_returns(target: pd.Series, yhat: pd.Series) -> pd.DataFrame:
+    """
+    Compute cumulative returns based on trading signals.
+
+    Parameters
+    ----------
+    target : pd.Series
+        Series of actual returns
+    yhat : pd.Series
+        Series of predicted returns used to generate trading signals
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing cumulative returns
+    """
     sign =  np.sign(yhat)
     returns = target * sign
     cum_return = compute_log_cum_returns(returns)

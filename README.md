@@ -121,3 +121,8 @@ This repository is licensed under the [MIT License](https://opensource.org/licen
 > Any use of the code for financial applications, trading, or investment decisions is done at your own risk and responsibility.  
 > We assume no liability for any outcomes resulting from the use of this code.
 
+
+## Contributors
+<a href="https://github.com/genai-for-traders/genai-for-trading-and-am/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=genai-for-traders/genai-for-trading-and-am" />
+</a>
